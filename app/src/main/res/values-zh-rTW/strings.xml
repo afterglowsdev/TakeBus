@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">搭车</string>
+    <string name="theme_light">亮色</string>
+    <string name="theme_dark">暗色</string>
+    <string name="theme_system">跟隨系統</string>
+    <string name="font_small">小</string>
+    <string name="font_medium">中</string>
+    <string name="font_large">大</string>
+</resources>
+
