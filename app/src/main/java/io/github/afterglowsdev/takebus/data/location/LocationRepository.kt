@@ -2,7 +2,9 @@ package io.github.afterglowsdev.takebus.data.location
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.location.Location
 import android.location.LocationManager
+import java.util.function.Consumer
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import io.github.afterglowsdev.takebus.data.chelaile.GeoPoint
@@ -50,19 +52,19 @@ class LocationRepository(private val context: Context) {
             locationManager,
             enabledProvider,
             null,
-            ContextCompat.getMainExecutor(context)
-        ) { location ->
-            if (location == null) {
-                continuation.resumeWithException(IllegalStateException("Unable to fetch location"))
-            } else {
-                continuation.resume(
-                    GeoPoint(
-                        lat = location.latitude,
-                        lng = location.longitude
+            ContextCompat.getMainExecutor(context),
+            Consumer<Location> { location ->
+                if (location == null) {
+                    continuation.resumeWithException(IllegalStateException("Unable to fetch location"))
+                } else {
+                    continuation.resume(
+                        GeoPoint(
+                            lat = location.latitude,
+                            lng = location.longitude
+                        )
                     )
-                )
+                }
             }
-        }
+        )
     }
 }
-
