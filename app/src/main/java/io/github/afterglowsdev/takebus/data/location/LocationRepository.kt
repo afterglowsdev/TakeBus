@@ -4,9 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.location.LocationManager
-import java.util.function.Consumer
+import android.os.CancellationSignal
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
+import androidx.core.util.Consumer
 import io.github.afterglowsdev.takebus.data.chelaile.GeoPoint
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -51,7 +52,7 @@ class LocationRepository(private val context: Context) {
         LocationManagerCompat.getCurrentLocation(
             locationManager,
             enabledProvider,
-            null,
+            null as CancellationSignal?,
             ContextCompat.getMainExecutor(context),
             Consumer<Location> { location ->
                 if (location == null) {
