@@ -97,6 +97,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.browser)
+    implementation(libs.google.material)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
