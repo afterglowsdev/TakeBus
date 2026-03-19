@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateBottomPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -33,7 +35,8 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -184,10 +187,7 @@ fun HomeScreen(
                                 val expanded = expandedStations[card.station.id] == true
 
                                 StationWindowCard(
-                                    modifier = Modifier.graphicsLayer {
-                                        scaleX = scale
-                                        scaleY = scale
-                                    },
+                                    modifier = Modifier.scale(scale),
                                     card = card,
                                     expanded = expanded,
                                     onToggle = {
@@ -261,7 +261,7 @@ private fun StationWindowCard(
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .size(18.dp)
-                            .graphicsLayer { rotationZ = if (expanded) 180f else 0f }
+                            .rotate(if (expanded) 180f else 0f)
                     )
                 }
             }
