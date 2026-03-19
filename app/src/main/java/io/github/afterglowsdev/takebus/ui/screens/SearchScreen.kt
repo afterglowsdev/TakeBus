@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.calculateBottomPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -83,10 +82,10 @@ fun SearchScreen(
         is SessionState.Ready -> {
             val searchState by produceState<SearchUiState>(
                 initialValue = SearchUiState.Idle,
-                key1 = query,
-                key2 = sessionState.city.id,
-                key3 = sessionState.location.lat,
-                key4 = sessionState.location.lng
+                query,
+                sessionState.city.id,
+                sessionState.location.lat,
+                sessionState.location.lng
             ) {
                 if (query.isBlank()) {
                     value = SearchUiState.Idle

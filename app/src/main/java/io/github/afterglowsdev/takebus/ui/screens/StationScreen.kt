@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.calculateTopPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -92,10 +91,10 @@ fun StationScreen(
             is SessionState.Ready -> {
                 val uiState by produceState<StationUiState>(
                     initialValue = StationUiState.Loading,
-                    key1 = sessionState.city.id,
-                    key2 = sessionState.location.lat,
-                    key3 = sessionState.location.lng,
-                    key4 = stationId
+                    sessionState.city.id,
+                    sessionState.location.lat,
+                    sessionState.location.lng,
+                    stationId
                 ) {
                     value = runCatching {
                         StationUiState.Data(
@@ -187,4 +186,3 @@ fun StationScreen(
         }
     }
 }
-

@@ -110,11 +110,11 @@ fun LineScreen(
             is SessionState.Ready -> {
                 val uiState by produceState<LineUiState>(
                     initialValue = LineUiState.Loading,
-                    key1 = sessionState.city.id,
-                    key2 = sessionState.location.lat,
-                    key3 = sessionState.location.lng,
-                    key4 = lineNo,
-                    key5 = selectedStationId
+                    sessionState.city.id,
+                    sessionState.location.lat,
+                    sessionState.location.lng,
+                    lineNo,
+                    selectedStationId
                 ) {
                     value = runCatching {
                         LineUiState.Data(
