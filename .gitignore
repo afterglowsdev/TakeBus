@@ -6,3 +6,7 @@ local.properties
 captures/
 *.iml
 app/build/
+*.jks
+*.p12
+KEYSTORE_BASE64.txt
+GITHUB_SECRETS_CONFIG.txt
