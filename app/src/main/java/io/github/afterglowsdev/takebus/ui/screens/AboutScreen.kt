@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.afterglowsdev.takebus.R
 
@@ -37,13 +38,14 @@ fun AboutScreen(
 ) {
     val context = LocalContext.current
     val repoUrl = "https://github.com/afterglowsdev/takebus"
+    val aboutTitle = stringResource(R.string.settings_about_title)
 
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(text = "About") },
+                title = { Text(text = aboutTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -78,7 +80,7 @@ fun AboutScreen(
                 )
             }
             Text(
-                text = "TakeBus",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.displaySmall
             )
             Surface(
@@ -91,13 +93,16 @@ fun AboutScreen(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    AboutLine(title = "GitHub", body = repoUrl) {
+                    AboutLine(title = stringResource(R.string.about_github_title), body = repoUrl) {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(repoUrl)))
                     }
-                    AboutLine(title = "License", body = "MIT License")
                     AboutLine(
-                        title = "Warning",
-                        body = "For personal learning only. Please delete within 48 hours."
+                        title = stringResource(R.string.about_license_title),
+                        body = stringResource(R.string.about_license_body)
+                    )
+                    AboutLine(
+                        title = stringResource(R.string.about_warning_title),
+                        body = stringResource(R.string.about_warning_body)
                     )
                 }
             }

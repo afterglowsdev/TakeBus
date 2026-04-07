@@ -24,7 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import io.github.afterglowsdev.takebus.R
 import io.github.afterglowsdev.takebus.data.chelaile.ChelaileRepository
 import io.github.afterglowsdev.takebus.data.chelaile.StationDetails
 import io.github.afterglowsdev.takebus.ui.SessionState
@@ -47,12 +49,21 @@ fun StationScreen(
     onBack: () -> Unit,
     onOpenLine: (String) -> Unit
 ) {
+    val screenTitle = stringResource(R.string.station_title)
+    val loadingLocation = stringResource(R.string.station_loading_location)
+    val locationNeededTitle = stringResource(R.string.station_location_needed_title)
+    val locationNeededBody = stringResource(R.string.station_location_needed_body)
+    val unavailableTitle = stringResource(R.string.station_unavailable_title)
+    val loadingFailedTitle = stringResource(R.string.station_loading_failed_title)
+    val loadingRoutes = stringResource(R.string.station_loading_routes)
+    val loadingFailed = stringResource(R.string.station_loading_failed)
+
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(text = "Stop") },
+                title = { Text(text = screenTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -68,22 +79,22 @@ fun StationScreen(
             SessionState.Loading -> {
                 LoadingPanel(
                     modifier = Modifier.padding(innerPadding),
-                    message = "Loading location"
+                    message = loadingLocation
                 )
             }
 
             SessionState.PermissionDenied -> {
                 MessagePanel(
                     modifier = Modifier.padding(innerPadding),
-                    title = "Location Needed",
-                    body = "Stop details need the current city context."
+                    title = locationNeededTitle,
+                    body = locationNeededBody
                 )
             }
 
             is SessionState.Error -> {
                 MessagePanel(
                     modifier = Modifier.padding(innerPadding),
-                    title = "Stop Unavailable",
+                    title = unavailableTitle,
                     body = sessionState.message
                 )
             }
@@ -105,7 +116,7 @@ fun StationScreen(
                             )
                         )
                     }.getOrElse { throwable ->
-                        StationUiState.Error(throwable.message ?: "Stop loading failed")
+                        StationUiState.Error(throwable.message ?: loadingFailed)
                     }
                 }
 
@@ -113,14 +124,14 @@ fun StationScreen(
                     StationUiState.Loading -> {
                         LoadingPanel(
                             modifier = Modifier.padding(innerPadding),
-                            message = "Loading stop routes"
+                            message = loadingRoutes
                         )
                     }
 
                     is StationUiState.Error -> {
                         MessagePanel(
                             modifier = Modifier.padding(innerPadding),
-                            title = "Stop Loading Failed",
+                            title = loadingFailedTitle,
                             body = state.message
                         )
                     }
@@ -132,7 +143,7 @@ fun StationScreen(
                                 .padding(horizontal = 18.dp),
                             verticalArrangement = Arrangement.spacedBy(14.dp),
                             contentPadding = PaddingValues(
-                                top = innerPadding.calculateTopPadding() + 10.dp,
+                                top = innerPadding.calculateTopPadding() + 22.dp,
                                 bottom = 24.dp
                             )
                         ) {
@@ -143,7 +154,10 @@ fun StationScreen(
                                         style = MaterialTheme.typography.displaySmall
                                     )
                                     Text(
-                                        text = "${state.details.lines.size} directions",
+                                        text = stringResource(
+                                            R.string.station_directions_count,
+                                            state.details.lines.size
+                                        ),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.68f)
                                     )
@@ -168,7 +182,10 @@ fun StationScreen(
                                             style = MaterialTheme.typography.titleMedium
                                         )
                                         Text(
-                                            text = "Next stop ${line.nextStationName}",
+                                            text = stringResource(
+                                                R.string.station_next_stop,
+                                                line.nextStationName
+                                            ),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                         )

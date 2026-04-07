@@ -24,6 +24,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -34,6 +35,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import io.github.afterglowsdev.takebus.AppContainer
+import io.github.afterglowsdev.takebus.R
 import io.github.afterglowsdev.takebus.data.chelaile.City
 import io.github.afterglowsdev.takebus.data.chelaile.GeoPoint
 import io.github.afterglowsdev.takebus.data.settings.AppSettings
@@ -68,6 +70,7 @@ fun TakeBusApp(container: AppContainer) {
     val settings by container.settingsRepository.settings.collectAsStateWithLifecycle(
         initialValue = AppSettings()
     )
+    val genericLocationError = stringResource(R.string.error_location_generic)
 
     var sessionState by remember { mutableStateOf<SessionState>(SessionState.Loading) }
     var refreshToken by rememberSaveable { mutableIntStateOf(0) }
@@ -121,7 +124,7 @@ fun TakeBusApp(container: AppContainer) {
             val city = container.chelaileRepository.resolveCity(location)
             SessionState.Ready(location = location, city = city)
         }.getOrElse { throwable ->
-            SessionState.Error(throwable.message ?: "Unable to load location")
+            SessionState.Error(throwable.message ?: genericLocationError)
         }
     }
 

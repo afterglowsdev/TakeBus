@@ -1,6 +1,8 @@
 package io.github.afterglowsdev.takebus.ui.screens
 
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,11 +11,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -34,10 +39,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.afterglowsdev.takebus.R
 import io.github.afterglowsdev.takebus.data.chelaile.ChelaileRepository
 import io.github.afterglowsdev.takebus.data.chelaile.HomeLineGroup
 import io.github.afterglowsdev.takebus.data.chelaile.HomeStationCard
@@ -62,20 +70,23 @@ fun HomeScreen(
     onOpenStation: (String) -> Unit,
     onOpenLine: (lineNo: String, stationId: String) -> Unit
 ) {
+    val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val collapsedShiftPx = with(LocalDensity.current) { 18.dp.toPx() }
+
     when (sessionState) {
         SessionState.Loading -> {
             LoadingPanel(
                 modifier = modifier.padding(contentPadding),
-                message = "Resolving your location"
+                message = stringResource(R.string.home_location_resolving)
             )
         }
 
         SessionState.PermissionDenied -> {
             MessagePanel(
                 modifier = modifier.padding(contentPadding),
-                title = "Need Location Access",
-                body = "Home uses your current location to load nearby stops and live arrivals.",
-                actionLabel = "Request Again",
+                title = stringResource(R.string.home_need_location_title),
+                body = stringResource(R.string.home_need_location_body),
+                actionLabel = stringResource(R.string.action_request_again),
                 onAction = onRequestLocation
             )
         }
@@ -83,9 +94,9 @@ fun HomeScreen(
         is SessionState.Error -> {
             MessagePanel(
                 modifier = modifier.padding(contentPadding),
-                title = "Location Failed",
+                title = stringResource(R.string.home_location_failed_title),
                 body = sessionState.message,
-                actionLabel = "Retry",
+                actionLabel = stringResource(R.string.action_retry),
                 onAction = onRequestLocation
             )
         }
@@ -93,6 +104,7 @@ fun HomeScreen(
         is SessionState.Ready -> {
             val listState = rememberLazyListState()
             val expandedStations = remember { mutableStateMapOf<String, Boolean>() }
+            val genericNearbyStopsError = stringResource(R.string.home_nearby_stops_error)
             val uiState by produceState<HomeUiState>(
                 initialValue = HomeUiState.Loading,
                 key1 = sessionState.city.id,
@@ -107,7 +119,7 @@ fun HomeScreen(
                         )
                     )
                 }.getOrElse { throwable ->
-                    HomeUiState.Error(throwable.message ?: "Unable to load nearby stops")
+                    HomeUiState.Error(throwable.message ?: genericNearbyStopsError)
                 }
             }
 
@@ -115,16 +127,16 @@ fun HomeScreen(
                 HomeUiState.Loading -> {
                     LoadingPanel(
                         modifier = modifier.padding(contentPadding),
-                        message = "Loading nearby stops"
+                        message = stringResource(R.string.home_loading_stops)
                     )
                 }
 
                 is HomeUiState.Error -> {
                     MessagePanel(
                         modifier = modifier.padding(contentPadding),
-                        title = "Stop Loading Failed",
+                        title = stringResource(R.string.home_stop_loading_failed_title),
                         body = state.message,
-                        actionLabel = "Refresh Location",
+                        actionLabel = stringResource(R.string.action_refresh_location),
                         onAction = onRequestLocation
                     )
                 }
@@ -133,9 +145,9 @@ fun HomeScreen(
                     if (state.cards.isEmpty()) {
                         MessagePanel(
                             modifier = modifier.padding(contentPadding),
-                            title = "No Nearby Stops",
-                            body = "No displayable stops were returned for the current location.",
-                            actionLabel = "Refresh",
+                            title = stringResource(R.string.home_no_nearby_stops_title),
+                            body = stringResource(R.string.home_no_nearby_stops_body),
+                            actionLabel = stringResource(R.string.action_refresh),
                             onAction = onRequestLocation
                         )
                     } else {
@@ -146,14 +158,14 @@ fun HomeScreen(
                             state = listState,
                             verticalArrangement = Arrangement.spacedBy(16.dp),
                             contentPadding = PaddingValues(
-                                top = 28.dp,
+                                top = maxOf(topInset, contentPadding.calculateTopPadding()) + 24.dp,
                                 bottom = contentPadding.calculateBottomPadding() + 32.dp
                             )
                         ) {
                             item {
                                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Text(
-                                        text = "Nearby Stops",
+                                        text = stringResource(R.string.home_title),
                                         style = MaterialTheme.typography.displaySmall
                                     )
                                     Row(
@@ -176,16 +188,54 @@ fun HomeScreen(
                             }
 
                             itemsIndexed(state.cards, key = { _, card -> card.station.id }) { index, card ->
-                                val distanceFactor =
+                                val relativeOffset =
                                     (index - listState.firstVisibleItemIndex) -
-                                        (listState.firstVisibleItemScrollOffset / 560f)
-                                val targetScale = (1f - distanceFactor.coerceAtLeast(0f) * 0.04f)
-                                    .coerceIn(0.88f, 1f)
-                                val scale by animateFloatAsState(targetValue = targetScale, label = "windowScale")
+                                        (listState.firstVisibleItemScrollOffset / 420f)
+                                val normalized = relativeOffset.coerceIn(-1.2f, 4f)
+                                val targetScale = when {
+                                    normalized < 0f -> 1f + (-normalized * 0.02f)
+                                    else -> 1f - (normalized * 0.05f)
+                                }.coerceIn(0.82f, 1.02f)
+                                val targetTranslationY = when {
+                                    normalized <= 0f -> 0f
+                                    else -> -normalized * collapsedShiftPx
+                                }
+                                val targetAlpha = (1f - normalized.coerceAtLeast(0f) * 0.08f)
+                                    .coerceIn(0.72f, 1f)
+
+                                val scale by animateFloatAsState(
+                                    targetValue = targetScale,
+                                    animationSpec = spring(
+                                        dampingRatio = 0.88f,
+                                        stiffness = Spring.StiffnessLow
+                                    ),
+                                    label = "windowScale"
+                                )
+                                val translationY by animateFloatAsState(
+                                    targetValue = targetTranslationY,
+                                    animationSpec = spring(
+                                        dampingRatio = 0.9f,
+                                        stiffness = Spring.StiffnessMediumLow
+                                    ),
+                                    label = "windowOffset"
+                                )
+                                val alpha by animateFloatAsState(
+                                    targetValue = targetAlpha,
+                                    animationSpec = spring(
+                                        dampingRatio = 0.92f,
+                                        stiffness = Spring.StiffnessMediumLow
+                                    ),
+                                    label = "windowAlpha"
+                                )
                                 val expanded = expandedStations[card.station.id] == true
 
                                 StationWindowCard(
-                                    modifier = Modifier.scale(scale),
+                                    modifier = Modifier.graphicsLayer {
+                                        scaleX = scale
+                                        scaleY = scale
+                                        this.translationY = translationY
+                                        this.alpha = alpha
+                                    },
                                     card = card,
                                     expanded = expanded,
                                     onToggle = {
@@ -212,6 +262,12 @@ private fun StationWindowCard(
     onOpenStation: () -> Unit,
     onOpenLine: (String) -> Unit
 ) {
+    val nearLabel = stringResource(R.string.home_near)
+    val linesCount = stringResource(R.string.home_lines_count, card.lines.size)
+    val distanceLabel = card.station.distanceMeters
+        ?.let { stringResource(R.string.common_distance_meters, it) }
+        ?: nearLabel
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
@@ -236,9 +292,9 @@ private fun StationWindowCard(
                     )
                     Text(
                         text = buildString {
-                            append(card.station.distanceMeters?.let { "${it}m" } ?: "Near")
+                            append(distanceLabel)
                             append("  |  ")
-                            append("${card.lines.size} lines")
+                            append(linesCount)
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
@@ -278,7 +334,7 @@ private fun StationWindowCard(
 
             if (!expanded && card.lines.size > 2) {
                 Spacer(modifier = Modifier.height(16.dp))
-                ActionPill(label = "Show All", onClick = onToggle)
+                ActionPill(label = stringResource(R.string.home_show_all), onClick = onToggle)
             }
         }
     }

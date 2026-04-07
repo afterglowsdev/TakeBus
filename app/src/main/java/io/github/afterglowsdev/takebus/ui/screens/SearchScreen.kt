@@ -5,10 +5,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,7 +30,9 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import io.github.afterglowsdev.takebus.R
 import io.github.afterglowsdev.takebus.data.chelaile.ChelaileRepository
 import io.github.afterglowsdev.takebus.data.chelaile.SearchLineHit
 import io.github.afterglowsdev.takebus.data.chelaile.SearchResults
@@ -53,33 +58,35 @@ fun SearchScreen(
     onOpenStation: (String) -> Unit,
     onOpenLine: (String) -> Unit
 ) {
+    val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     var query by rememberSaveable { mutableStateOf("") }
 
     when (sessionState) {
         SessionState.Loading -> {
             LoadingPanel(
                 modifier = modifier.padding(contentPadding),
-                message = "Preparing search scope"
+                message = stringResource(R.string.search_prepare_scope)
             )
         }
 
         SessionState.PermissionDenied -> {
             MessagePanel(
                 modifier = modifier.padding(contentPadding),
-                title = "Location Context Needed",
-                body = "Allow location access so search can stay inside the current city."
+                title = stringResource(R.string.search_location_context_needed_title),
+                body = stringResource(R.string.search_location_context_needed_body)
             )
         }
 
         is SessionState.Error -> {
             MessagePanel(
                 modifier = modifier.padding(contentPadding),
-                title = "Search Unavailable",
+                title = stringResource(R.string.search_unavailable_title),
                 body = sessionState.message
             )
         }
 
         is SessionState.Ready -> {
+            val searchFailure = stringResource(R.string.search_failed)
             val searchState by produceState<SearchUiState>(
                 initialValue = SearchUiState.Idle,
                 query,
@@ -102,7 +109,7 @@ fun SearchScreen(
                         )
                     )
                 }.getOrElse { throwable ->
-                    SearchUiState.Error(throwable.message ?: "Search failed")
+                    SearchUiState.Error(throwable.message ?: searchFailure)
                 }
             }
 
@@ -112,14 +119,14 @@ fun SearchScreen(
                     .padding(horizontal = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(
-                    top = 28.dp,
+                    top = maxOf(topInset, contentPadding.calculateTopPadding()) + 24.dp,
                     bottom = contentPadding.calculateBottomPadding() + 28.dp
                 )
             ) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(
-                            text = "Search",
+                            text = stringResource(R.string.search_title),
                             style = MaterialTheme.typography.displaySmall
                         )
                         OutlinedTextField(
@@ -127,7 +134,7 @@ fun SearchScreen(
                             onValueChange = { query = it },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = {
-                                Text(text = "Search route or stop")
+                                Text(text = stringResource(R.string.search_placeholder))
                             },
                             leadingIcon = {
                                 Icon(
@@ -150,8 +157,8 @@ fun SearchScreen(
                     SearchUiState.Idle -> {
                         item {
                             SearchStatusCard(
-                                title = "Search Instantly",
-                                body = "Routes and stops open directly into their detail pages."
+                                title = stringResource(R.string.search_status_idle_title),
+                                body = stringResource(R.string.search_status_idle_body)
                             )
                         }
                     }
@@ -159,8 +166,8 @@ fun SearchScreen(
                     SearchUiState.Loading -> {
                         item {
                             SearchStatusCard(
-                                title = "Searching",
-                                body = "Results refresh automatically."
+                                title = stringResource(R.string.search_status_loading_title),
+                                body = stringResource(R.string.search_status_loading_body)
                             )
                         }
                     }
@@ -168,7 +175,7 @@ fun SearchScreen(
                     is SearchUiState.Error -> {
                         item {
                             SearchStatusCard(
-                                title = "Search Failed",
+                                title = stringResource(R.string.search_status_failed_title),
                                 body = state.message
                             )
                         }
@@ -179,14 +186,14 @@ fun SearchScreen(
                         if (!hasResults) {
                             item {
                                 SearchStatusCard(
-                                    title = "No Results",
-                                    body = "Try another keyword."
+                                    title = stringResource(R.string.search_no_results_title),
+                                    body = stringResource(R.string.search_no_results_body)
                                 )
                             }
                         } else {
                             if (state.results.lines.isNotEmpty()) {
                                 item {
-                                    SearchSectionTitle(text = "Routes")
+                                    SearchSectionTitle(text = stringResource(R.string.search_routes_title))
                                 }
                                 items(state.results.lines, key = { "${it.lineId}_${it.direction}" }) { line ->
                                     SearchLineRow(line = line, onClick = { onOpenLine(line.lineNo) })
@@ -195,7 +202,7 @@ fun SearchScreen(
                             if (state.results.stations.isNotEmpty()) {
                                 item {
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    SearchSectionTitle(text = "Stops")
+                                    SearchSectionTitle(text = stringResource(R.string.search_stops_title))
                                 }
                                 items(state.results.stations, key = { it.stationId }) { station ->
                                     SearchStationRow(
@@ -269,7 +276,7 @@ private fun SearchStationRow(station: SearchStationHit, onClick: () -> Unit) {
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = "Stop",
+                text = stringResource(R.string.search_stop_label),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
             )

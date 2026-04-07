@@ -6,5 +6,81 @@
     <string name="font_small">小</string>
     <string name="font_medium">中</string>
     <string name="font_large">大</string>
-</resources>
+    <string name="error_location_generic">无法加载定位</string>
+    <string name="action_request_again">重新请求</string>
+    <string name="action_retry">重试</string>
+    <string name="action_refresh">刷新</string>
+    <string name="action_refresh_location">刷新定位</string>
+    <string name="common_distance_meters">%1$d米</string>
 
+    <string name="home_title">附近站点</string>
+    <string name="home_location_resolving">正在获取当前位置</string>
+    <string name="home_need_location_title">需要定位权限</string>
+    <string name="home_need_location_body">首页需要使用你的位置来加载附近站点和实时到站信息。</string>
+    <string name="home_location_failed_title">定位失败</string>
+    <string name="home_loading_stops">正在加载附近站点</string>
+    <string name="home_stop_loading_failed_title">站点加载失败</string>
+    <string name="home_nearby_stops_error">无法加载附近站点</string>
+    <string name="home_no_nearby_stops_title">附近没有站点</string>
+    <string name="home_no_nearby_stops_body">当前位置附近没有可显示的站点信息。</string>
+    <string name="home_near">附近</string>
+    <string name="home_lines_count">%1$d条线路</string>
+    <string name="home_show_all">显示全部</string>
+
+    <string name="search_title">搜索</string>
+    <string name="search_prepare_scope">正在准备搜索范围</string>
+    <string name="search_location_context_needed_title">需要定位信息</string>
+    <string name="search_location_context_needed_body">请允许定位权限，以便将搜索结果限定在当前城市。</string>
+    <string name="search_unavailable_title">搜索不可用</string>
+    <string name="search_failed">搜索失败</string>
+    <string name="search_placeholder">搜索线路或站点</string>
+    <string name="search_status_idle_title">即时搜索</string>
+    <string name="search_status_idle_body">线路和站点都可以直接打开对应详情页。</string>
+    <string name="search_status_loading_title">搜索中</string>
+    <string name="search_status_loading_body">结果会自动刷新。</string>
+    <string name="search_status_failed_title">搜索失败</string>
+    <string name="search_no_results_title">没有结果</string>
+    <string name="search_no_results_body">试试其他关键词。</string>
+    <string name="search_routes_title">线路</string>
+    <string name="search_stops_title">站点</string>
+    <string name="search_stop_label">站点</string>
+
+    <string name="settings_title">设置</string>
+    <string name="settings_appearance_title">外观</string>
+    <string name="settings_font_size_title">字号</string>
+    <string name="settings_about_title">关于</string>
+    <string name="settings_about_this_app_title">关于应用</string>
+    <string name="settings_about_this_app_subtitle">图标、仓库地址、协议和学习使用提示</string>
+
+    <string name="station_title">站点</string>
+    <string name="station_loading_location">正在加载定位</string>
+    <string name="station_location_needed_title">需要定位信息</string>
+    <string name="station_location_needed_body">站点详情需要当前城市信息。</string>
+    <string name="station_unavailable_title">站点不可用</string>
+    <string name="station_loading_failed_title">站点加载失败</string>
+    <string name="station_loading_routes">正在加载站点线路</string>
+    <string name="station_loading_failed">站点加载失败</string>
+    <string name="station_directions_count">%1$d个方向</string>
+    <string name="station_next_stop">下一站 %1$s</string>
+
+    <string name="line_loading_location">正在加载定位</string>
+    <string name="line_location_context_needed_title">需要定位信息</string>
+    <string name="line_location_context_needed_body">线路详情需要当前城市和站点信息。</string>
+    <string name="line_unavailable_title">线路不可用</string>
+    <string name="line_loading_failed_title">线路加载失败</string>
+    <string name="line_loading_both">正在加载双向线路</string>
+    <string name="line_loading_failed">线路加载失败</string>
+    <string name="line_no_directions_title">没有方向数据</string>
+    <string name="line_no_directions_body">当前线路没有返回可显示的方向信息。</string>
+    <string name="line_no_live_tip">暂无实时提示</string>
+    <string name="line_selected_stop">当前站点：%1$s</string>
+    <string name="line_no_live_positions">暂无车辆位置</string>
+    <string name="line_near_stop">靠近第%1$d站</string>
+    <string name="line_selected_label">已选中</string>
+
+    <string name="about_github_title">GitHub</string>
+    <string name="about_license_title">开源协议</string>
+    <string name="about_license_body">MIT License</string>
+    <string name="about_warning_title">警告</string>
+    <string name="about_warning_body">仅供个人学习使用，请在48小时内删除。</string>
+</resources>

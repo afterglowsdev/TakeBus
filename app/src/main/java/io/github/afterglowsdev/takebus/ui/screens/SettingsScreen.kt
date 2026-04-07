@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import io.github.afterglowsdev.takebus.R
 import io.github.afterglowsdev.takebus.data.settings.AppSettings
 import io.github.afterglowsdev.takebus.data.settings.FontScaleOption
@@ -36,24 +39,26 @@ fun SettingsScreen(
     onFontScaleChange: (FontScaleOption) -> Unit,
     onOpenAbout: () -> Unit
 ) {
+    val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 18.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
         contentPadding = PaddingValues(
-            top = 28.dp,
+            top = maxOf(topInset, contentPadding.calculateTopPadding()) + 24.dp,
             bottom = contentPadding.calculateBottomPadding() + 28.dp
         )
     ) {
         item {
             Text(
-                text = "Settings",
+                text = stringResource(R.string.settings_title),
                 style = MaterialTheme.typography.displaySmall
             )
         }
         item {
-            SettingGroup(title = "Appearance") {
+            SettingGroup(title = stringResource(R.string.settings_appearance_title)) {
                 ThemeMode.entries.forEach { mode ->
                     OptionRow(
                         title = when (mode) {
@@ -68,7 +73,7 @@ fun SettingsScreen(
             }
         }
         item {
-            SettingGroup(title = "Font Size") {
+            SettingGroup(title = stringResource(R.string.settings_font_size_title)) {
                 FontScaleOption.entries.forEach { option ->
                     OptionRow(
                         title = when (option) {
@@ -83,10 +88,10 @@ fun SettingsScreen(
             }
         }
         item {
-            SettingGroup(title = "About") {
+            SettingGroup(title = stringResource(R.string.settings_about_title)) {
                 OptionRow(
-                    title = "About This App",
-                    subtitle = "Icon, repository, license, and learning-use warning",
+                    title = stringResource(R.string.settings_about_this_app_title),
+                    subtitle = stringResource(R.string.settings_about_this_app_subtitle),
                     selected = false,
                     onClick = onOpenAbout
                 )

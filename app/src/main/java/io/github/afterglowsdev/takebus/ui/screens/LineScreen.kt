@@ -35,10 +35,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.afterglowsdev.takebus.R
 import io.github.afterglowsdev.takebus.data.chelaile.BusMarker
 import io.github.afterglowsdev.takebus.data.chelaile.ChelaileRepository
 import io.github.afterglowsdev.takebus.data.chelaile.LineDirectionPanel
@@ -65,6 +67,15 @@ fun LineScreen(
     onBack: () -> Unit
 ) {
     var selectedStationId by rememberSaveable(lineNo) { mutableStateOf(initialStationId.orEmpty()) }
+    val loadingLocation = stringResource(R.string.line_loading_location)
+    val locationContextNeededTitle = stringResource(R.string.line_location_context_needed_title)
+    val locationContextNeededBody = stringResource(R.string.line_location_context_needed_body)
+    val lineUnavailableTitle = stringResource(R.string.line_unavailable_title)
+    val lineLoadingFailedTitle = stringResource(R.string.line_loading_failed_title)
+    val lineLoadingBoth = stringResource(R.string.line_loading_both)
+    val lineLoadingFailed = stringResource(R.string.line_loading_failed)
+    val noDirectionsTitle = stringResource(R.string.line_no_directions_title)
+    val noDirectionsBody = stringResource(R.string.line_no_directions_body)
 
     Scaffold(
         modifier = modifier,
@@ -87,22 +98,22 @@ fun LineScreen(
             SessionState.Loading -> {
                 LoadingPanel(
                     modifier = Modifier.padding(innerPadding),
-                    message = "Loading location"
+                    message = loadingLocation
                 )
             }
 
             SessionState.PermissionDenied -> {
                 MessagePanel(
                     modifier = Modifier.padding(innerPadding),
-                    title = "Location Context Needed",
-                    body = "Line details need the current city and stop context."
+                    title = locationContextNeededTitle,
+                    body = locationContextNeededBody
                 )
             }
 
             is SessionState.Error -> {
                 MessagePanel(
                     modifier = Modifier.padding(innerPadding),
-                    title = "Line Unavailable",
+                    title = lineUnavailableTitle,
                     body = sessionState.message
                 )
             }
@@ -126,7 +137,7 @@ fun LineScreen(
                             )
                         )
                     }.getOrElse { throwable ->
-                        LineUiState.Error(throwable.message ?: "Line loading failed")
+                        LineUiState.Error(throwable.message ?: lineLoadingFailed)
                     }
                 }
 
@@ -134,14 +145,14 @@ fun LineScreen(
                     LineUiState.Loading -> {
                         LoadingPanel(
                             modifier = Modifier.padding(innerPadding),
-                            message = "Loading both directions"
+                            message = lineLoadingBoth
                         )
                     }
 
                     is LineUiState.Error -> {
                         MessagePanel(
                             modifier = Modifier.padding(innerPadding),
-                            title = "Line Loading Failed",
+                            title = lineLoadingFailedTitle,
                             body = state.message
                         )
                     }
@@ -151,14 +162,15 @@ fun LineScreen(
                         if (directions.isEmpty()) {
                             MessagePanel(
                                 modifier = Modifier.padding(innerPadding),
-                                title = "No Directions",
-                                body = "No route directions were returned for this line."
+                                title = noDirectionsTitle,
+                                body = noDirectionsBody
                             )
                         } else {
                             Column(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding)
+                                    .padding(top = 10.dp)
                             ) {
                                 directions.forEachIndexed { index, direction ->
                                     DirectionSection(
@@ -189,6 +201,10 @@ private fun DirectionSection(
     panel: LineDirectionPanel,
     onSelectStop: (RouteStop) -> Unit
 ) {
+    val noLiveTip = stringResource(R.string.line_no_live_tip)
+    val selectedStop = stringResource(R.string.line_selected_stop, panel.selectedStop.name)
+    val noLivePositions = stringResource(R.string.line_no_live_positions)
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -211,13 +227,13 @@ private fun DirectionSection(
                 )
                 Text(
                     text = panel.tip.ifBlank {
-                        panel.buses.firstOrNull()?.etaText ?: "No live tip"
+                        panel.buses.firstOrNull()?.etaText ?: noLiveTip
                     },
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 )
                 Text(
-                    text = "Selected stop: ${panel.selectedStop.name}",
+                    text = selectedStop,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
                 )
@@ -236,7 +252,7 @@ private fun DirectionSection(
                 color = MaterialTheme.colorScheme.surface
             ) {
                 Text(
-                    text = "No live bus positions",
+                    text = noLivePositions,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                     style = MaterialTheme.typography.bodyMedium
                 )
@@ -271,7 +287,7 @@ private fun BusChip(bus: BusMarker) {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Near stop ${bus.order}",
+                text = stringResource(R.string.line_near_stop, bus.order),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.66f)
             )
@@ -281,7 +297,7 @@ private fun BusChip(bus: BusMarker) {
             )
             bus.distanceToStationMeters?.let { distance ->
                 Text(
-                    text = "${distance}m",
+                    text = stringResource(R.string.common_distance_meters, distance),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.66f)
                 )
@@ -298,6 +314,8 @@ private fun RouteTimeline(
     targetOrder: Int,
     onSelectStop: (RouteStop) -> Unit
 ) {
+    val selectedLabel = stringResource(R.string.line_selected_label)
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(30.dp),
@@ -357,7 +375,7 @@ private fun RouteTimeline(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = if (stop.order == targetOrder) "Selected" else "#${stop.order}",
+                        text = if (stop.order == targetOrder) selectedLabel else "#${stop.order}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )

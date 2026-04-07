@@ -6,5 +6,81 @@
     <string name="font_small">Small</string>
     <string name="font_medium">Medium</string>
     <string name="font_large">Large</string>
-</resources>
+    <string name="error_location_generic">Unable to load location</string>
+    <string name="action_request_again">Request Again</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_refresh_location">Refresh Location</string>
+    <string name="common_distance_meters">%1$dm</string>
 
+    <string name="home_title">Nearby Stops</string>
+    <string name="home_location_resolving">Resolving your location</string>
+    <string name="home_need_location_title">Need Location Access</string>
+    <string name="home_need_location_body">Home uses your current location to load nearby stops and live arrivals.</string>
+    <string name="home_location_failed_title">Location Failed</string>
+    <string name="home_loading_stops">Loading nearby stops</string>
+    <string name="home_stop_loading_failed_title">Stop Loading Failed</string>
+    <string name="home_nearby_stops_error">Unable to load nearby stops</string>
+    <string name="home_no_nearby_stops_title">No Nearby Stops</string>
+    <string name="home_no_nearby_stops_body">No displayable stops were returned for the current location.</string>
+    <string name="home_near">Near</string>
+    <string name="home_lines_count">%1$d lines</string>
+    <string name="home_show_all">Show All</string>
+
+    <string name="search_title">Search</string>
+    <string name="search_prepare_scope">Preparing search scope</string>
+    <string name="search_location_context_needed_title">Location Context Needed</string>
+    <string name="search_location_context_needed_body">Allow location access so search can stay inside the current city.</string>
+    <string name="search_unavailable_title">Search Unavailable</string>
+    <string name="search_failed">Search failed</string>
+    <string name="search_placeholder">Search route or stop</string>
+    <string name="search_status_idle_title">Search Instantly</string>
+    <string name="search_status_idle_body">Routes and stops open directly into their detail pages.</string>
+    <string name="search_status_loading_title">Searching</string>
+    <string name="search_status_loading_body">Results refresh automatically.</string>
+    <string name="search_status_failed_title">Search Failed</string>
+    <string name="search_no_results_title">No Results</string>
+    <string name="search_no_results_body">Try another keyword.</string>
+    <string name="search_routes_title">Routes</string>
+    <string name="search_stops_title">Stops</string>
+    <string name="search_stop_label">Stop</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance_title">Appearance</string>
+    <string name="settings_font_size_title">Font Size</string>
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_this_app_title">About This App</string>
+    <string name="settings_about_this_app_subtitle">Icon, repository, license, and learning-use warning</string>
+
+    <string name="station_title">Stop</string>
+    <string name="station_loading_location">Loading location</string>
+    <string name="station_location_needed_title">Location Needed</string>
+    <string name="station_location_needed_body">Stop details need the current city context.</string>
+    <string name="station_unavailable_title">Stop Unavailable</string>
+    <string name="station_loading_failed_title">Stop Loading Failed</string>
+    <string name="station_loading_routes">Loading stop routes</string>
+    <string name="station_loading_failed">Stop loading failed</string>
+    <string name="station_directions_count">%1$d directions</string>
+    <string name="station_next_stop">Next stop %1$s</string>
+
+    <string name="line_loading_location">Loading location</string>
+    <string name="line_location_context_needed_title">Location Context Needed</string>
+    <string name="line_location_context_needed_body">Line details need the current city and stop context.</string>
+    <string name="line_unavailable_title">Line Unavailable</string>
+    <string name="line_loading_failed_title">Line Loading Failed</string>
+    <string name="line_loading_both">Loading both directions</string>
+    <string name="line_loading_failed">Line loading failed</string>
+    <string name="line_no_directions_title">No Directions</string>
+    <string name="line_no_directions_body">No route directions were returned for this line.</string>
+    <string name="line_no_live_tip">No live tip</string>
+    <string name="line_selected_stop">Selected stop: %1$s</string>
+    <string name="line_no_live_positions">No live bus positions</string>
+    <string name="line_near_stop">Near stop %1$d</string>
+    <string name="line_selected_label">Selected</string>
+
+    <string name="about_github_title">GitHub</string>
+    <string name="about_license_title">License</string>
+    <string name="about_license_body">MIT License</string>
+    <string name="about_warning_title">Warning</string>
+    <string name="about_warning_body">For personal learning only. Please delete within 48 hours.</string>
+</resources>

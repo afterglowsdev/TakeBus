@@ -1,10 +1,86 @@
 <resources>
-    <string name="app_name">搭车</string>
+    <string name="app_name">搭車</string>
     <string name="theme_light">亮色</string>
     <string name="theme_dark">暗色</string>
     <string name="theme_system">跟隨系統</string>
     <string name="font_small">小</string>
     <string name="font_medium">中</string>
     <string name="font_large">大</string>
-</resources>
+    <string name="error_location_generic">無法載入定位</string>
+    <string name="action_request_again">重新請求</string>
+    <string name="action_retry">重試</string>
+    <string name="action_refresh">重新整理</string>
+    <string name="action_refresh_location">重新整理定位</string>
+    <string name="common_distance_meters">%1$d米</string>
 
+    <string name="home_title">附近站點</string>
+    <string name="home_location_resolving">正在取得目前位置</string>
+    <string name="home_need_location_title">需要定位權限</string>
+    <string name="home_need_location_body">首頁需要使用你的位置來載入附近站點及即時到站資訊。</string>
+    <string name="home_location_failed_title">定位失敗</string>
+    <string name="home_loading_stops">正在載入附近站點</string>
+    <string name="home_stop_loading_failed_title">站點載入失敗</string>
+    <string name="home_nearby_stops_error">無法載入附近站點</string>
+    <string name="home_no_nearby_stops_title">附近沒有站點</string>
+    <string name="home_no_nearby_stops_body">目前位置附近沒有可顯示的站點資訊。</string>
+    <string name="home_near">附近</string>
+    <string name="home_lines_count">%1$d條路線</string>
+    <string name="home_show_all">顯示全部</string>
+
+    <string name="search_title">搜尋</string>
+    <string name="search_prepare_scope">正在準備搜尋範圍</string>
+    <string name="search_location_context_needed_title">需要定位資訊</string>
+    <string name="search_location_context_needed_body">請允許定位權限，以便將搜尋結果限制在目前城市。</string>
+    <string name="search_unavailable_title">搜尋不可用</string>
+    <string name="search_failed">搜尋失敗</string>
+    <string name="search_placeholder">搜尋路線或站點</string>
+    <string name="search_status_idle_title">即時搜尋</string>
+    <string name="search_status_idle_body">路線和站點都可以直接開啟對應詳情頁。</string>
+    <string name="search_status_loading_title">搜尋中</string>
+    <string name="search_status_loading_body">結果會自動更新。</string>
+    <string name="search_status_failed_title">搜尋失敗</string>
+    <string name="search_no_results_title">沒有結果</string>
+    <string name="search_no_results_body">試試其他關鍵字。</string>
+    <string name="search_routes_title">路線</string>
+    <string name="search_stops_title">站點</string>
+    <string name="search_stop_label">站點</string>
+
+    <string name="settings_title">設定</string>
+    <string name="settings_appearance_title">外觀</string>
+    <string name="settings_font_size_title">字體大小</string>
+    <string name="settings_about_title">關於</string>
+    <string name="settings_about_this_app_title">關於應用</string>
+    <string name="settings_about_this_app_subtitle">圖示、倉庫地址、協議和學習使用提示</string>
+
+    <string name="station_title">站點</string>
+    <string name="station_loading_location">正在載入定位</string>
+    <string name="station_location_needed_title">需要定位資訊</string>
+    <string name="station_location_needed_body">站點詳情需要目前城市資訊。</string>
+    <string name="station_unavailable_title">站點不可用</string>
+    <string name="station_loading_failed_title">站點載入失敗</string>
+    <string name="station_loading_routes">正在載入站點路線</string>
+    <string name="station_loading_failed">站點載入失敗</string>
+    <string name="station_directions_count">%1$d個方向</string>
+    <string name="station_next_stop">下一站 %1$s</string>
+
+    <string name="line_loading_location">正在載入定位</string>
+    <string name="line_location_context_needed_title">需要定位資訊</string>
+    <string name="line_location_context_needed_body">路線詳情需要目前城市及站點資訊。</string>
+    <string name="line_unavailable_title">路線不可用</string>
+    <string name="line_loading_failed_title">路線載入失敗</string>
+    <string name="line_loading_both">正在載入雙向路線</string>
+    <string name="line_loading_failed">路線載入失敗</string>
+    <string name="line_no_directions_title">沒有方向資料</string>
+    <string name="line_no_directions_body">目前路線沒有返回可顯示的方向資訊。</string>
+    <string name="line_no_live_tip">暫無即時提示</string>
+    <string name="line_selected_stop">目前站點：%1$s</string>
+    <string name="line_no_live_positions">暫無車輛位置</string>
+    <string name="line_near_stop">靠近第%1$d站</string>
+    <string name="line_selected_label">已選取</string>
+
+    <string name="about_github_title">GitHub</string>
+    <string name="about_license_title">開源協議</string>
+    <string name="about_license_body">MIT License</string>
+    <string name="about_warning_title">警告</string>
+    <string name="about_warning_body">僅供個人學習使用，請在48小時內刪除。</string>
+</resources>

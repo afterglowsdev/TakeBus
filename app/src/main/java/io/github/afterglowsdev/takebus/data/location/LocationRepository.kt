@@ -9,14 +9,17 @@ import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import androidx.core.util.Consumer
 import io.github.afterglowsdev.takebus.data.chelaile.GeoPoint
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 
 class LocationRepository(private val context: Context) {
 
     @SuppressLint("MissingPermission")
-    suspend fun currentLocation(): GeoPoint = suspendCancellableCoroutine { continuation ->
+    suspend fun currentLocation(): GeoPoint {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val providers = listOf(
             LocationManager.GPS_PROVIDER,
@@ -31,13 +34,7 @@ class LocationRepository(private val context: Context) {
             .maxByOrNull { location -> location.time }
 
         if (freshestLastKnown != null && System.currentTimeMillis() - freshestLastKnown.time < 120_000L) {
-            continuation.resume(
-                GeoPoint(
-                    lat = freshestLastKnown.latitude,
-                    lng = freshestLastKnown.longitude
-                )
-            )
-            return@suspendCancellableCoroutine
+            return freshestLastKnown.toGeoPoint()
         }
 
         val enabledProvider = providers.firstOrNull { provider ->
@@ -45,27 +42,53 @@ class LocationRepository(private val context: Context) {
         }
 
         if (enabledProvider == null) {
-            continuation.resumeWithException(IllegalStateException("No location provider available"))
-            return@suspendCancellableCoroutine
+            return freshestLastKnown?.toGeoPoint()
+                ?: throw IllegalStateException("No location provider available")
         }
 
-        LocationManagerCompat.getCurrentLocation(
-            locationManager,
-            enabledProvider,
-            null as CancellationSignal?,
-            ContextCompat.getMainExecutor(context),
-            Consumer<Location> { location ->
-                if (location == null) {
-                    continuation.resumeWithException(IllegalStateException("Unable to fetch location"))
-                } else {
-                    continuation.resume(
-                        GeoPoint(
-                            lat = location.latitude,
-                            lng = location.longitude
-                        )
+        val resolvedLocation = withTimeoutOrNull(10_000L) {
+            suspendCancellableCoroutine<GeoPoint> { continuation ->
+                val cancellationSignal = CancellationSignal()
+                continuation.invokeOnCancellation {
+                    cancellationSignal.cancel()
+                }
+
+                runCatching {
+                    LocationManagerCompat.getCurrentLocation(
+                        locationManager,
+                        enabledProvider,
+                        cancellationSignal,
+                        ContextCompat.getMainExecutor(context),
+                        Consumer<Location> { location ->
+                            if (!continuation.isActive) return@Consumer
+                            when {
+                                location != null -> continuation.resume(location.toGeoPoint())
+                                freshestLastKnown != null -> continuation.resume(freshestLastKnown.toGeoPoint())
+                                else -> continuation.resumeWithException(
+                                    IllegalStateException("Unable to fetch location")
+                                )
+                            }
+                        }
                     )
+                }.getOrElse { throwable ->
+                    if (!continuation.isActive) return@suspendCancellableCoroutine
+                    if (throwable is CancellationException) {
+                        throw throwable
+                    }
+                    freshestLastKnown?.let {
+                        continuation.resume(it.toGeoPoint())
+                    } ?: continuation.resumeWithException(throwable)
                 }
             }
-        )
+        }
+
+        return resolvedLocation
+            ?: freshestLastKnown?.toGeoPoint()
+            ?: throw IllegalStateException("Location request timed out")
     }
 }
+
+private fun Location.toGeoPoint(): GeoPoint = GeoPoint(
+    lat = latitude,
+    lng = longitude
+)
