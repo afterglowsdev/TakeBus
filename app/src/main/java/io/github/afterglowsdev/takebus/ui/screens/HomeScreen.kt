@@ -39,8 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,7 +70,6 @@ fun HomeScreen(
     onOpenLine: (lineNo: String, stationId: String) -> Unit
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val collapsedShiftPx = with(LocalDensity.current) { 18.dp.toPx() }
 
     when (sessionState) {
         SessionState.Loading -> {
@@ -191,17 +189,11 @@ fun HomeScreen(
                                 val relativeOffset =
                                     (index - listState.firstVisibleItemIndex) -
                                         (listState.firstVisibleItemScrollOffset / 420f)
-                                val normalized = relativeOffset.coerceIn(-1.2f, 4f)
+                                val normalized = relativeOffset.coerceIn(-0.8f, 4f)
                                 val targetScale = when {
-                                    normalized < 0f -> 1f + (-normalized * 0.02f)
-                                    else -> 1f - (normalized * 0.05f)
-                                }.coerceIn(0.82f, 1.02f)
-                                val targetTranslationY = when {
-                                    normalized <= 0f -> 0f
-                                    else -> -normalized * collapsedShiftPx
-                                }
-                                val targetAlpha = (1f - normalized.coerceAtLeast(0f) * 0.08f)
-                                    .coerceIn(0.72f, 1f)
+                                    normalized < 0f -> 1f + (-normalized * 0.01f)
+                                    else -> 1f - (normalized * 0.028f)
+                                }.coerceIn(0.9f, 1.01f)
 
                                 val scale by animateFloatAsState(
                                     targetValue = targetScale,
@@ -211,31 +203,10 @@ fun HomeScreen(
                                     ),
                                     label = "windowScale"
                                 )
-                                val translationY by animateFloatAsState(
-                                    targetValue = targetTranslationY,
-                                    animationSpec = spring(
-                                        dampingRatio = 0.9f,
-                                        stiffness = Spring.StiffnessMediumLow
-                                    ),
-                                    label = "windowOffset"
-                                )
-                                val alpha by animateFloatAsState(
-                                    targetValue = targetAlpha,
-                                    animationSpec = spring(
-                                        dampingRatio = 0.92f,
-                                        stiffness = Spring.StiffnessMediumLow
-                                    ),
-                                    label = "windowAlpha"
-                                )
                                 val expanded = expandedStations[card.station.id] == true
 
                                 StationWindowCard(
-                                    modifier = Modifier.graphicsLayer {
-                                        scaleX = scale
-                                        scaleY = scale
-                                        this.translationY = translationY
-                                        this.alpha = alpha
-                                    },
+                                    modifier = Modifier.scale(scale),
                                     card = card,
                                     expanded = expanded,
                                     onToggle = {
