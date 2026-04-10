@@ -157,7 +157,7 @@ class ChelaileRepository {
         displayLineNo: String,
         stationId: String? = null,
         stationName: String? = null
-        ): LineScreenData = coroutineScope {
+    ): LineScreenData = coroutineScope {
         // 优先按精确 lineId 打开线路，避免内部线路号再次搜索时无法命中。
         if (lineId.isBlank()) {
             error("Missing line id")
@@ -168,22 +168,55 @@ class ChelaileRepository {
             lineId = lineId
         )
         val resolvedDisplayLineNo = primaryRoute.displayLineNo.ifBlank { displayLineNo }
-        val candidates = (
-            listOf(primaryRoute) + searchLineCandidates(
-                cityId = cityId,
-                location = location,
-                displayLineNo = resolvedDisplayLineNo
+
+        val stationCandidates = stationId
+            ?.takeIf { it.isNotBlank() }
+            ?.let { currentStationId ->
+                getStationDetails(
+                    cityId = cityId,
+                    location = location,
+                    station = NearbyStation(
+                        id = currentStationId,
+                        name = "",
+                        distanceMeters = null,
+                        lat = null,
+                        lng = null
+                    )
+                ).lines
+                    .map { it.line }
+                    .filter { normalizeLine(it.displayLineNo) == normalizeLine(resolvedDisplayLineNo) }
+            }
+            .orEmpty()
+
+        val searchCandidates = buildList {
+            addAll(
+                searchLineCandidates(
+                    cityId = cityId,
+                    location = location,
+                    displayLineNo = resolvedDisplayLineNo
+                )
             )
-        )
+            if (normalizeLine(primaryRoute.lineNo) != normalizeLine(resolvedDisplayLineNo)) {
+                addAll(
+                    searchLineCandidates(
+                        cityId = cityId,
+                        location = location,
+                        displayLineNo = primaryRoute.lineNo
+                    )
+                )
+            }
+        }
+
+        val candidates = (listOf(primaryRoute) + stationCandidates + searchCandidates)
             .distinctBy { it.lineId }
-            .sortedBy { it.direction }
+            .sortedWith(compareBy<LineBrief>({ directionSignature(it) }, { it.direction }))
 
         if (candidates.isEmpty()) {
             error("No line found for $displayLineNo")
         }
 
         val directions = candidates
-            .distinctBy { it.direction }
+            .distinctBy { directionSignature(it) }
             .take(2)
             .map { candidate ->
                 async {
@@ -201,7 +234,6 @@ class ChelaileRepository {
 
         LineScreenData(displayLineNo = resolvedDisplayLineNo, directions = directions)
     }
-
     private suspend fun getStationDetails(
         cityId: String,
         location: GeoPoint,
@@ -448,7 +480,7 @@ class ChelaileRepository {
         candidate: LineBrief,
         stationId: String?,
         stationName: String?
-        ): LineDirectionPanel {
+    ): LineDirectionPanel {
         // 每个方向独立请求详情和车辆，避免两个方向混到同一面板里。
         val routeRoot = action(
             handler = "bus/line!lineRoute.action",
@@ -503,7 +535,6 @@ class ChelaileRepository {
             buses = buses
         )
     }
-
     private fun selectStop(
         stops: List<RouteStop>,
         stationId: String?,
@@ -595,6 +626,16 @@ class ChelaileRepository {
     private fun normalizeLine(value: String): String = normalizeText(value).replace(Regex("[^0-9a-z]"), "")
 
     private fun normalizeText(value: String): String = value.replace("\\s+".toRegex(), "").lowercase()
+
+    private fun directionSignature(line: LineBrief): String {
+        val start = normalizeText(line.startSn)
+        val end = normalizeText(line.endSn)
+        return if (start.isNotBlank() || end.isNotBlank()) {
+            "$start->$end"
+        } else {
+            "${normalizeLine(line.displayLineNo)}#${line.direction}"
+        }
+    }
 
     private fun extractDisplayLineNo(item: JsonObject, fallbackLineNo: String): String {
         val displayName = listOf(
