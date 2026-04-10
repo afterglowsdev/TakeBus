@@ -157,8 +157,8 @@ class ChelaileRepository {
         displayLineNo: String,
         stationId: String? = null,
         stationName: String? = null
-    ): LineScreenData = coroutineScope {
-        // 线路详情优先按精确 lineId 打开，避免内部线路号无法再次搜索命中。
+        ): LineScreenData = coroutineScope {
+        // 优先按精确 lineId 打开线路，避免内部线路号再次搜索时无法命中。
         if (lineId.isBlank()) {
             error("Missing line id")
         }
@@ -448,8 +448,8 @@ class ChelaileRepository {
         candidate: LineBrief,
         stationId: String?,
         stationName: String?
-    ): LineDirectionPanel {
-        // 每个方向独立请求详情和车辆，避免两个方向在同一面板里混车。
+        ): LineDirectionPanel {
+        // 每个方向独立请求详情和车辆，避免两个方向混到同一面板里。
         val routeRoot = action(
             handler = "bus/line!lineRoute.action",
             cityId = cityId,
@@ -736,3 +736,4 @@ private fun JsonObject.double(key: String): Double? {
     val primitive = this[key] as? JsonPrimitive ?: return null
     return primitive.doubleOrNull
 }
+
