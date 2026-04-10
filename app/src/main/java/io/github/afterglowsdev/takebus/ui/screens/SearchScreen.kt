@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.calculateBottomPadding
+import androidx.compose.foundation.layout.calculateTopPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,7 +58,7 @@ fun SearchScreen(
     sessionState: SessionState,
     repository: ChelaileRepository,
     onOpenStation: (String) -> Unit,
-    onOpenLine: (String) -> Unit
+    onOpenLine: (lineId: String, displayLineNo: String) -> Unit
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     var query by rememberSaveable { mutableStateOf("") }
@@ -196,7 +198,10 @@ fun SearchScreen(
                                     SearchSectionTitle(text = stringResource(R.string.search_routes_title))
                                 }
                                 items(state.results.lines, key = { "${it.lineId}_${it.direction}" }) { line ->
-                                    SearchLineRow(line = line, onClick = { onOpenLine(line.lineNo) })
+                                    SearchLineRow(
+                                        line = line,
+                                        onClick = { onOpenLine(line.lineId, line.displayLineNo) }
+                                    )
                                 }
                             }
                             if (state.results.stations.isNotEmpty()) {
@@ -244,7 +249,7 @@ private fun SearchLineRow(line: SearchLineHit, onClick: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = line.lineNo,
+                text = line.displayLineNo,
                 style = MaterialTheme.typography.titleLarge
             )
             Text(

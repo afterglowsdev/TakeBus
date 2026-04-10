@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -60,13 +61,14 @@ private sealed interface LineUiState {
 @Composable
 fun LineScreen(
     modifier: Modifier = Modifier,
-    lineNo: String,
+    lineId: String,
+    displayLineNo: String,
     initialStationId: String?,
     sessionState: SessionState,
     repository: ChelaileRepository,
     onBack: () -> Unit
 ) {
-    var selectedStationId by rememberSaveable(lineNo) { mutableStateOf(initialStationId.orEmpty()) }
+    var selectedStationId by rememberSaveable(lineId, displayLineNo) { mutableStateOf(initialStationId.orEmpty()) }
     val loadingLocation = stringResource(R.string.line_loading_location)
     val locationContextNeededTitle = stringResource(R.string.line_location_context_needed_title)
     val locationContextNeededBody = stringResource(R.string.line_location_context_needed_body)
@@ -76,13 +78,14 @@ fun LineScreen(
     val lineLoadingFailed = stringResource(R.string.line_loading_failed)
     val noDirectionsTitle = stringResource(R.string.line_no_directions_title)
     val noDirectionsBody = stringResource(R.string.line_no_directions_body)
+    val titleText = displayLineNo.ifBlank { lineId }
 
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(text = lineNo) },
+                title = { Text(text = titleText) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -124,7 +127,8 @@ fun LineScreen(
                     sessionState.city.id,
                     sessionState.location.lat,
                     sessionState.location.lng,
-                    lineNo,
+                    lineId,
+                    displayLineNo,
                     selectedStationId
                 ) {
                     value = runCatching {
@@ -132,7 +136,8 @@ fun LineScreen(
                             repository.getLineScreen(
                                 cityId = sessionState.city.id,
                                 location = sessionState.location,
-                                lineNo = lineNo,
+                                lineId = lineId,
+                                displayLineNo = displayLineNo,
                                 stationId = selectedStationId.takeIf { it.isNotBlank() }
                             )
                         )

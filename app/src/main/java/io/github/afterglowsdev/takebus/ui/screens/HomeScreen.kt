@@ -19,6 +19,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.calculateBottomPadding
+import androidx.compose.foundation.layout.calculateTopPadding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -67,7 +70,7 @@ fun HomeScreen(
     repository: ChelaileRepository,
     onRequestLocation: () -> Unit,
     onOpenStation: (String) -> Unit,
-    onOpenLine: (lineNo: String, stationId: String) -> Unit
+    onOpenLine: (lineId: String, displayLineNo: String, stationId: String) -> Unit
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
@@ -213,7 +216,9 @@ fun HomeScreen(
                                         expandedStations[card.station.id] = !expanded
                                     },
                                     onOpenStation = { onOpenStation(card.station.id) },
-                                    onOpenLine = { lineNo -> onOpenLine(lineNo, card.station.id) }
+                                    onOpenLine = { lineId, displayLineNo ->
+                                        onOpenLine(lineId, displayLineNo, card.station.id)
+                                    }
                                 )
                             }
                         }
@@ -231,7 +236,7 @@ private fun StationWindowCard(
     expanded: Boolean,
     onToggle: () -> Unit,
     onOpenStation: () -> Unit,
-    onOpenLine: (String) -> Unit
+    onOpenLine: (lineId: String, displayLineNo: String) -> Unit
 ) {
     val nearLabel = stringResource(R.string.home_near)
     val linesCount = stringResource(R.string.home_lines_count, card.lines.size)
@@ -298,7 +303,12 @@ private fun StationWindowCard(
                 lines.forEach { line ->
                     HomeLineItem(
                         group = line,
-                        onClick = { onOpenLine(line.lineNo) }
+                        onClick = {
+                            onOpenLine(
+                                line.representativeLineId,
+                                line.displayLineNo
+                            )
+                        }
                     )
                 }
             }
@@ -337,7 +347,7 @@ private fun HomeLineItem(
                         .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        text = group.lineNo,
+                        text = group.displayLineNo,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold

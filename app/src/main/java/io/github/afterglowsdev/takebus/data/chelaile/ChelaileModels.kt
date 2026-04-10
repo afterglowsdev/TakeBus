@@ -21,6 +21,7 @@ data class NearbyStation(
 data class LineBrief(
     val lineId: String,
     val lineNo: String,
+    val displayLineNo: String,
     val name: String,
     val direction: Int,
     val startSn: String,
@@ -53,7 +54,8 @@ data class StationDetails(
 )
 
 data class HomeLineGroup(
-    val lineNo: String,
+    val displayLineNo: String,
+    val representativeLineId: String,
     val entries: List<StationLine>,
     val bestEntry: StationLine
 )
@@ -73,6 +75,7 @@ data class SearchStationHit(
 data class SearchLineHit(
     val lineId: String,
     val lineNo: String,
+    val displayLineNo: String,
     val direction: Int,
     val startSn: String,
     val endSn: String
@@ -116,7 +119,6 @@ data class LineDirectionPanel(
 )
 
 data class LineScreenData(
-    val lineNo: String,
+    val displayLineNo: String,
     val directions: List<LineDirectionPanel>
 )
-

@@ -22,8 +22,8 @@ android {
         applicationId = "io.github.afterglowsdev.takebus"
         minSdk = 26
         targetSdk = 35
-        versionCode = 10
-        versionName = "1.0r"
+        versionCode = 12
+        versionName = "1.0ppap"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

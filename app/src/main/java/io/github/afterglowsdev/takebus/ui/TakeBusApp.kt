@@ -55,7 +55,7 @@ private const val SearchRoute = "search"
 private const val SettingsRoute = "settings"
 private const val StationRoute = "station/{stationId}"
 private const val AboutRoute = "about"
-private const val LineRoute = "line/{lineNo}?stationId={stationId}"
+private const val LineRoute = "line?lineId={lineId}&displayLineNo={displayLineNo}&stationId={stationId}"
 
 sealed interface SessionState {
     data object Loading : SessionState
@@ -193,9 +193,13 @@ fun TakeBusApp(container: AppContainer) {
                         onOpenStation = { stationId ->
                             navController.navigate("station/${Uri.encode(stationId)}")
                         },
-                        onOpenLine = { lineNo, stationId ->
+                        onOpenLine = { lineId, displayLineNo, stationId ->
                             navController.navigate(
-                                "line/${Uri.encode(lineNo)}?stationId=${Uri.encode(stationId)}"
+                                buildLineRoute(
+                                    lineId = lineId,
+                                    displayLineNo = displayLineNo,
+                                    stationId = stationId
+                                )
                             )
                         }
                     )
@@ -210,8 +214,14 @@ fun TakeBusApp(container: AppContainer) {
                         onOpenStation = { stationId ->
                             navController.navigate("station/${Uri.encode(stationId)}")
                         },
-                        onOpenLine = { lineNo ->
-                            navController.navigate("line/${Uri.encode(lineNo)}?stationId=")
+                        onOpenLine = { lineId, displayLineNo ->
+                            navController.navigate(
+                                buildLineRoute(
+                                    lineId = lineId,
+                                    displayLineNo = displayLineNo,
+                                    stationId = null
+                                )
+                            )
                         }
                     )
                 }
@@ -248,9 +258,13 @@ fun TakeBusApp(container: AppContainer) {
                         sessionState = sessionState,
                         repository = container.chelaileRepository,
                         onBack = { navController.popBackStack() },
-                        onOpenLine = { lineNo ->
+                        onOpenLine = { lineId, displayLineNo ->
                             navController.navigate(
-                                "line/${Uri.encode(lineNo)}?stationId=${Uri.encode(stationId)}"
+                                buildLineRoute(
+                                    lineId = lineId,
+                                    displayLineNo = displayLineNo,
+                                    stationId = stationId
+                                )
                             )
                         }
                     )
@@ -259,7 +273,14 @@ fun TakeBusApp(container: AppContainer) {
                 composable(
                     route = LineRoute,
                     arguments = listOf(
-                        navArgument("lineNo") { type = NavType.StringType },
+                        navArgument("lineId") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
+                        navArgument("displayLineNo") {
+                            type = NavType.StringType
+                            defaultValue = ""
+                        },
                         navArgument("stationId") {
                             type = NavType.StringType
                             defaultValue = ""
@@ -267,11 +288,13 @@ fun TakeBusApp(container: AppContainer) {
                         }
                     )
                 ) { entry ->
-                    val lineNo = entry.arguments?.getString("lineNo").orEmpty()
+                    val lineId = entry.arguments?.getString("lineId").orEmpty()
+                    val displayLineNo = entry.arguments?.getString("displayLineNo").orEmpty()
                     val stationId = entry.arguments?.getString("stationId")?.takeIf { it.isNotBlank() }
                     LineScreen(
                         modifier = Modifier.fillMaxSize(),
-                        lineNo = lineNo,
+                        lineId = lineId,
+                        displayLineNo = displayLineNo,
                         initialStationId = stationId,
                         sessionState = sessionState,
                         repository = container.chelaileRepository,
@@ -287,5 +310,21 @@ fun TakeBusApp(container: AppContainer) {
                 }
             }
         }
+    }
+}
+
+private fun buildLineRoute(
+    lineId: String,
+    displayLineNo: String,
+    stationId: String?
+): String {
+    return buildString {
+        append("line?")
+        append("lineId=")
+        append(Uri.encode(lineId))
+        append("&displayLineNo=")
+        append(Uri.encode(displayLineNo))
+        append("&stationId=")
+        append(Uri.encode(stationId.orEmpty()))
     }
 }

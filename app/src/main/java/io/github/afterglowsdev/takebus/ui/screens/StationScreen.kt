@@ -47,7 +47,7 @@ fun StationScreen(
     sessionState: SessionState,
     repository: ChelaileRepository,
     onBack: () -> Unit,
-    onOpenLine: (String) -> Unit
+    onOpenLine: (lineId: String, displayLineNo: String) -> Unit
 ) {
     val screenTitle = stringResource(R.string.station_title)
     val loadingLocation = stringResource(R.string.station_loading_location)
@@ -167,7 +167,12 @@ fun StationScreen(
                                 Surface(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable { onOpenLine(line.line.lineNo) },
+                                        .clickable {
+                                            onOpenLine(
+                                                line.line.lineId,
+                                                line.line.displayLineNo
+                                            )
+                                        },
                                     shape = RoundedCornerShape(26.dp),
                                     color = MaterialTheme.colorScheme.surface,
                                     tonalElevation = 0.dp,
@@ -178,7 +183,7 @@ fun StationScreen(
                                         verticalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         Text(
-                                            text = "${line.line.lineNo}  ${line.line.directionLabel}",
+                                            text = "${line.line.displayLineNo}  ${line.line.directionLabel}",
                                             style = MaterialTheme.typography.titleMedium
                                         )
                                         Text(

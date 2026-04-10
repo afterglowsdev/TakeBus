@@ -69,11 +69,12 @@ class ChelaileRepository {
                     async {
                         val detail = getStationDetails(city.id, location, station)
                         val grouped = detail.lines
-                            .groupBy { it.line.lineNo }
-                            .map { (lineNo, entries) ->
+                            .groupBy { it.line.displayLineNo }
+                            .map { (displayLineNo, entries) ->
                                 val sorted = entries.sortedWith(stationLineOrdering)
                                 HomeLineGroup(
-                                    lineNo = lineNo,
+                                    displayLineNo = displayLineNo,
+                                    representativeLineId = sorted.first().line.lineId,
                                     entries = sorted,
                                     bestEntry = sorted.first()
                                 )
@@ -117,17 +118,21 @@ class ChelaileRepository {
         val lines = data.array("lines")
             .mapNotNull { element ->
                 val item = element.asObjectOrNull() ?: return@mapNotNull null
-                val lineNo = item.string("lineNo") ?: item.string("name") ?: return@mapNotNull null
+                val lineNo = item.string("lineNo")
+                    ?: item.string("lineName")
+                    ?: item.string("name")
+                    ?: return@mapNotNull null
                 val lineId = item.string("lineId") ?: return@mapNotNull null
                 SearchLineHit(
                     lineId = lineId,
                     lineNo = lineNo,
+                    displayLineNo = extractDisplayLineNo(item, lineNo),
                     direction = item.int("direction") ?: 0,
                     startSn = item.string("startSn").orEmpty(),
                     endSn = item.string("endSn").orEmpty()
                 )
             }
-            .distinctBy { "${it.lineNo}_${it.direction}_${it.lineId}" }
+            .distinctBy { "${it.displayLineNo}_${it.direction}_${it.lineId}" }
 
         val stations = data.array("stations")
             .mapNotNull { element ->
@@ -148,77 +153,53 @@ class ChelaileRepository {
     suspend fun getLineScreen(
         cityId: String,
         location: GeoPoint,
-        lineNo: String,
+        lineId: String,
+        displayLineNo: String,
         stationId: String? = null,
         stationName: String? = null
     ): LineScreenData = coroutineScope {
-        val candidates = searchLineCandidates(cityId, location, lineNo)
+        // 线路详情优先按精确 lineId 打开，避免内部线路号无法再次搜索命中。
+        if (lineId.isBlank()) {
+            error("Missing line id")
+        }
+        val primaryRoute = getRouteLineById(
+            cityId = cityId,
+            location = location,
+            lineId = lineId
+        )
+        val resolvedDisplayLineNo = primaryRoute.displayLineNo.ifBlank { displayLineNo }
+        val candidates = (
+            listOf(primaryRoute) + searchLineCandidates(
+                cityId = cityId,
+                location = location,
+                displayLineNo = resolvedDisplayLineNo
+            )
+        )
+            .distinctBy { it.lineId }
+            .sortedBy { it.direction }
+
         if (candidates.isEmpty()) {
-            error("No line found for $lineNo")
+            error("No line found for $displayLineNo")
         }
 
         val directions = candidates
-            .distinctBy { it.lineId }
+            .distinctBy { it.direction }
+            .take(2)
             .map { candidate ->
                 async {
-                    val routeRoot = action(
-                        handler = "bus/line!lineRoute.action",
+                    buildDirectionPanel(
                         cityId = cityId,
                         location = location,
-                        params = linkedMapOf("lineId" to candidate.lineId)
-                    )
-
-                    val routeLine = routeRoot.obj("line")?.let(::parseLineBrief) ?: candidate
-                    val routeStops = routeRoot.array("stations")
-                        .mapNotNull { it.asObjectOrNull()?.let(::parseRouteStop) }
-                        .sortedBy { it.order }
-                    val selectedStop = selectStop(routeStops, stationId, stationName, location)
-                    val nextStopName = routeStops.firstOrNull { it.order == selectedStop.order + 1 }?.name
-                        ?: selectedStop.name
-
-                    val detailRoot = encryptedAction(
-                        handler = "bus/line!encryptedLineDetail.action",
-                        cityId = cityId,
-                        location = location,
-                        businessParams = linkedMapOf(
-                            "lineId" to routeLine.lineId,
-                            "lineName" to routeLine.name,
-                            "direction" to routeLine.direction.toString(),
-                            "stationName" to selectedStop.name,
-                            "nextStationName" to nextStopName,
-                            "lineNo" to routeLine.lineNo,
-                            "targetOrder" to selectedStop.order.toString()
-                        )
-                    )
-
-                    val detailLine = detailRoot.obj("line")?.let(::parseLineBrief) ?: routeLine
-                    val detailStops = detailRoot.array("stations")
-                        .mapNotNull { it.asObjectOrNull()?.let(::parseRouteStop) }
-                        .sortedBy { it.order }
-                    val resolvedStops = if (detailStops.isNotEmpty()) detailStops else routeStops
-                    val resolvedSelected = resolvedStops.firstOrNull { it.id == selectedStop.id }
-                        ?: resolvedStops.minByOrNull { abs(it.order - selectedStop.order) }
-                        ?: selectedStop
-
-                    val buses = detailRoot.array("buses")
-                        .mapNotNull { it.asObjectOrNull()?.let(::parseBusMarker) }
-                        .sortedBy { abs(it.order - resolvedSelected.order) }
-
-                    LineDirectionPanel(
-                        line = detailLine,
-                        tip = detailRoot.obj("tip")?.string("desc").orEmpty(),
-                        targetOrder = detailRoot.int("targetOrder") ?: resolvedSelected.order,
-                        selectedStop = resolvedSelected,
-                        nextStopName = nextStopName,
-                        stations = resolvedStops,
-                        buses = buses
+                        candidate = candidate,
+                        stationId = stationId,
+                        stationName = stationName
                     )
                 }
             }
             .awaitAll()
             .sortedBy { it.line.direction }
 
-        LineScreenData(lineNo = lineNo, directions = directions)
+        LineScreenData(displayLineNo = resolvedDisplayLineNo, directions = directions)
     }
 
     private suspend fun getStationDetails(
@@ -276,21 +257,21 @@ class ChelaileRepository {
     private suspend fun searchLineCandidates(
         cityId: String,
         location: GeoPoint,
-        lineNo: String
+        displayLineNo: String
     ): List<LineBrief> {
         val searchHits = action(
             handler = "basesearch/client/clientSearchList.action",
             cityId = cityId,
             location = location,
             params = linkedMapOf(
-                "key" to lineNo,
+                "key" to displayLineNo,
                 "type" to "1"
             ),
             accept = "text/plain,*/*"
         )
             .array("lines")
             .mapNotNull { it.asObjectOrNull()?.let(::parseLineBrief) }
-            .filter { normalizeLine(it.lineNo) == normalizeLine(lineNo) }
+            .filter { normalizeLine(it.displayLineNo) == normalizeLine(displayLineNo) }
 
         if (searchHits.size >= 2) {
             return searchHits
@@ -300,7 +281,7 @@ class ChelaileRepository {
             handler = "bus/cityLineList",
             cityId = cityId,
             location = location,
-            params = linkedMapOf("lineName" to lineNo)
+            params = linkedMapOf("lineName" to displayLineNo)
         )
             .obj("allLines")
             ?.values
@@ -308,7 +289,7 @@ class ChelaileRepository {
                 value.asArrayOrNull().orEmpty().mapNotNull { it.asObjectOrNull()?.let(::parseLineBrief) }
             }
             .orEmpty()
-            .filter { normalizeLine(it.lineNo) == normalizeLine(lineNo) }
+            .filter { normalizeLine(it.displayLineNo) == normalizeLine(displayLineNo) }
 
         return (searchHits + fallbackHits)
             .distinctBy { it.lineId }
@@ -360,11 +341,18 @@ class ChelaileRepository {
     }
 
     private fun parseLineBrief(item: JsonObject): LineBrief {
-        val lineNo = item.string("lineNo") ?: item.string("name").orEmpty()
+        val lineNo = item.string("lineNo")
+            ?: item.string("lineName")
+            ?: item.string("name")
+            .orEmpty()
+        val name = item.string("name")
+            ?: item.string("lineName")
+            ?: lineNo
         return LineBrief(
             lineId = item.string("lineId").orEmpty(),
             lineNo = lineNo,
-            name = item.string("name") ?: lineNo,
+            displayLineNo = extractDisplayLineNo(item, lineNo),
+            name = name,
             direction = item.int("direction") ?: 0,
             startSn = item.string("startSn").orEmpty(),
             endSn = item.string("endSn") ?: item.string("destinationName").orEmpty(),
@@ -436,6 +424,83 @@ class ChelaileRepository {
                 else -> "${etaMinutes} min"
             },
             timestampText = item.string("timeStr").orEmpty()
+        )
+    }
+
+    private suspend fun getRouteLineById(
+        cityId: String,
+        location: GeoPoint,
+        lineId: String
+    ): LineBrief {
+        val routeRoot = action(
+            handler = "bus/line!lineRoute.action",
+            cityId = cityId,
+            location = location,
+            params = linkedMapOf("lineId" to lineId)
+        )
+        return routeRoot.obj("line")?.let(::parseLineBrief)
+            ?: error("No line found for $lineId")
+    }
+
+    private suspend fun buildDirectionPanel(
+        cityId: String,
+        location: GeoPoint,
+        candidate: LineBrief,
+        stationId: String?,
+        stationName: String?
+    ): LineDirectionPanel {
+        // 每个方向独立请求详情和车辆，避免两个方向在同一面板里混车。
+        val routeRoot = action(
+            handler = "bus/line!lineRoute.action",
+            cityId = cityId,
+            location = location,
+            params = linkedMapOf("lineId" to candidate.lineId)
+        )
+
+        val routeLine = routeRoot.obj("line")?.let(::parseLineBrief) ?: candidate
+        val routeStops = routeRoot.array("stations")
+            .mapNotNull { it.asObjectOrNull()?.let(::parseRouteStop) }
+            .sortedBy { it.order }
+        val selectedStop = selectStop(routeStops, stationId, stationName, location)
+        val nextStopName = routeStops.firstOrNull { it.order == selectedStop.order + 1 }?.name
+            ?: selectedStop.name
+
+        val detailRoot = encryptedAction(
+            handler = "bus/line!encryptedLineDetail.action",
+            cityId = cityId,
+            location = location,
+            businessParams = linkedMapOf(
+                "lineId" to routeLine.lineId,
+                "lineName" to routeLine.name,
+                "direction" to routeLine.direction.toString(),
+                "stationName" to selectedStop.name,
+                "nextStationName" to nextStopName,
+                "lineNo" to routeLine.lineNo,
+                "targetOrder" to selectedStop.order.toString()
+            )
+        )
+
+        val detailLine = detailRoot.obj("line")?.let(::parseLineBrief) ?: routeLine
+        val detailStops = detailRoot.array("stations")
+            .mapNotNull { it.asObjectOrNull()?.let(::parseRouteStop) }
+            .sortedBy { it.order }
+        val resolvedStops = if (detailStops.isNotEmpty()) detailStops else routeStops
+        val resolvedSelected = resolvedStops.firstOrNull { it.id == selectedStop.id }
+            ?: resolvedStops.minByOrNull { abs(it.order - selectedStop.order) }
+            ?: selectedStop
+
+        val buses = detailRoot.array("buses")
+            .mapNotNull { it.asObjectOrNull()?.let(::parseBusMarker) }
+            .sortedBy { abs(it.order - resolvedSelected.order) }
+
+        return LineDirectionPanel(
+            line = detailLine,
+            tip = detailRoot.obj("tip")?.string("desc").orEmpty(),
+            targetOrder = detailRoot.int("targetOrder") ?: resolvedSelected.order,
+            selectedStop = resolvedSelected,
+            nextStopName = nextStopName,
+            stations = resolvedStops,
+            buses = buses
         )
     }
 
@@ -531,6 +596,53 @@ class ChelaileRepository {
 
     private fun normalizeText(value: String): String = value.replace("\\s+".toRegex(), "").lowercase()
 
+    private fun extractDisplayLineNo(item: JsonObject, fallbackLineNo: String): String {
+        val displayName = listOf(
+            "displayLineNo",
+            "simpleLineNo",
+            "shortName",
+            "lineName",
+            "lineNickName",
+            "showName",
+            "name"
+        )
+            .mapNotNull(item::string)
+            .firstOrNull { candidate ->
+                candidate.isNotBlank() && !looksLikeDirectionDescription(candidate)
+            }
+        return resolveDisplayLineNo(
+            lineNo = fallbackLineNo,
+            name = displayName ?: fallbackLineNo
+        )
+    }
+
+    private fun resolveDisplayLineNo(lineNo: String?, name: String?): String {
+        val rawLineNo = lineNo.orEmpty().ifBlank { name.orEmpty() }
+        val rawName = name.orEmpty()
+        return when {
+            rawLineNo.isBlank() -> rawName
+            looksLikeInternalLineNo(rawLineNo) && rawName.isNotBlank() && !looksLikeInternalLineNo(rawName) -> rawName
+            !looksLikeInternalLineNo(rawLineNo) -> rawLineNo
+            rawName.isNotBlank() -> rawName
+            else -> rawLineNo
+        }
+    }
+
+    private fun looksLikeDirectionDescription(value: String): Boolean {
+        val trimmed = value.trim()
+        return trimmed.contains("->") || trimmed.contains("→") || trimmed.contains("⟶")
+    }
+
+    private fun looksLikeInternalLineNo(value: String): Boolean {
+        val trimmed = value.trim()
+        val compact = normalizeText(trimmed)
+        return when {
+            compact.matches(Regex("r\\d{4,}")) -> true
+            compact.matches(Regex("\\d{5,}")) -> true
+            else -> false
+        }
+    }
+
     private fun haversineMeters(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
         val earthRadiusMeters = 6_371_000.0
         val dLat = Math.toRadians(lat2 - lat1)
@@ -555,7 +667,7 @@ class ChelaileRepository {
         val homeLineOrdering = compareBy<HomeLineGroup>(
             { if (it.bestEntry.state == 0) 0 else 1 },
             { it.bestEntry.etaMinutes ?: Int.MAX_VALUE },
-            { it.lineNo }
+            { it.displayLineNo }
         )
     }
 }
