@@ -1,19 +1,27 @@
 package io.github.afterglowsdev.takebus.ui.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,9 +43,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.afterglowsdev.takebus.R
@@ -84,7 +92,13 @@ fun LineScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(text = titleText) },
+                title = {
+                    Text(
+                        text = titleText,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -174,7 +188,6 @@ fun LineScreen(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(innerPadding)
-                                    .padding(top = 10.dp)
                             ) {
                                 directions.forEachIndexed { index, direction ->
                                     DirectionSection(
@@ -186,7 +199,8 @@ fun LineScreen(
                                     )
                                     if (index != directions.lastIndex) {
                                         HorizontalDivider(
-                                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f)
+                                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f),
+                                            thickness = 1.dp
                                         )
                                     }
                                 }
@@ -206,65 +220,95 @@ private fun DirectionSection(
     onSelectStop: (RouteStop) -> Unit
 ) {
     val noLiveTip = stringResource(R.string.line_no_live_tip)
-    val selectedStop = stringResource(R.string.line_selected_stop, panel.selectedStop.name)
     val noLivePositions = stringResource(R.string.line_no_live_positions)
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 0.dp,
-            shadowElevation = 10.dp
+    Column(modifier = modifier.fillMaxWidth()) {
+        // ── Header + bus chips ──────────────────────────────────────────────
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(top = 14.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            // Direction info card with primary colour background
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.primary
             ) {
-                Text(
-                    text = panel.line.directionLabel,
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text(
-                    text = panel.tip.ifBlank {
-                        panel.buses.firstOrNull()?.etaText ?: noLiveTip
-                    },
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                )
-                Text(
-                    text = selectedStop,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.62f)
-                )
-            }
-        }
-
-        if (panel.buses.isNotEmpty()) {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(panel.buses.take(4), key = { "${it.busId}_${it.order}" }) { bus ->
-                    BusChip(bus = bus)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = panel.line.directionLabel,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Text(
+                        text = panel.tip.ifBlank {
+                            panel.buses.firstOrNull()?.etaText ?: noLiveTip
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.80f)
+                    )
+                    // Selected stop badge
+                    val selectedStopName = panel.selectedStop.name
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.55f),
+                                    CircleShape
+                                )
+                        )
+                        Text(
+                            text = selectedStopName,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.65f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
-        } else {
-            Surface(
-                shape = RoundedCornerShape(18.dp),
-                color = MaterialTheme.colorScheme.surface
-            ) {
-                Text(
-                    text = noLivePositions,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+
+            // Bus arrival chips row
+            if (panel.buses.isNotEmpty()) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(panel.buses.take(4), key = { "${it.busId}_${it.order}" }) { bus ->
+                        BusChip(bus = bus)
+                    }
+                }
+            } else {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 0.dp,
+                    shadowElevation = 4.dp
+                ) {
+                    Text(
+                        text = noLivePositions,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
             }
         }
 
+        // ── Route timeline fills remaining space ────────────────────────────
         RouteTimeline(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
             stops = panel.stations,
             selectedStopId = panel.selectedStop.id,
             targetOrder = panel.targetOrder,
@@ -275,35 +319,51 @@ private fun DirectionSection(
 
 @Composable
 private fun BusChip(bus: BusMarker) {
+    // Treat ≤ 2 min as "arriving" urgency
+    val isUrgent = (bus.etaMinutes ?: Int.MAX_VALUE) <= 2
+    val chipBg by animateColorAsState(
+        targetValue = if (isUrgent) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.surface,
+        animationSpec = tween(300),
+        label = "busChipBg"
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (isUrgent) MaterialTheme.colorScheme.onPrimary
+        else MaterialTheme.colorScheme.onSurface,
+        animationSpec = tween(300),
+        label = "busChipContent"
+    )
+
     Surface(
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(18.dp),
+        color = chipBg,
         tonalElevation = 0.dp,
-        shadowElevation = 8.dp
+        shadowElevation = if (isUrgent) 2.dp else 6.dp
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.padding(horizontal = 15.dp, vertical = 11.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = bus.busId,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = stringResource(R.string.line_near_stop, bus.order),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.66f)
-            )
+            // ETA — most prominent info
             Text(
                 text = bus.etaText,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = contentColor
             )
+            // Bus ID
+            Text(
+                text = bus.busId,
+                style = MaterialTheme.typography.labelSmall,
+                color = contentColor.copy(alpha = 0.7f)
+            )
+            // Distance (optional)
             bus.distanceToStationMeters?.let { distance ->
                 Text(
                     text = stringResource(R.string.common_distance_meters, distance),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.66f)
+                    style = MaterialTheme.typography.labelSmall,
+                    color = contentColor.copy(alpha = 0.55f)
                 )
             }
         }
@@ -322,66 +382,128 @@ private fun RouteTimeline(
 
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(30.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp,
-        shadowElevation = 12.dp
+        color = MaterialTheme.colorScheme.background
     ) {
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 20.dp)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                horizontal = 16.dp,
+                vertical = 8.dp
+            )
         ) {
-            items(stops, key = { "${it.id}_${it.order}" }) { stop ->
-                val selected = stop.id == selectedStopId
-                val accent = if (selected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
-                }
-                Column(
+            itemsIndexed(
+                items = stops,
+                key = { _, stop -> "${stop.id}_${stop.order}" }
+            ) { index, stop ->
+                val isSelected = stop.id == selectedStopId
+                val isFirst = index == 0
+                val isLast = index == stops.lastIndex
+                val isTarget = stop.order == targetOrder
+
+                val dotColor by animateColorAsState(
+                    targetValue = when {
+                        isSelected -> MaterialTheme.colorScheme.primary
+                        isTarget -> MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+                        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.40f)
+                    },
+                    animationSpec = tween(220),
+                    label = "dot_${stop.id}"
+                )
+                val lineColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+
+                // Row: timeline indicator | stop info | order badge
+                Row(
                     modifier = Modifier
-                        .width(92.dp)
-                        .clickable { onSelectStop(stop) },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min)
+                        .clickable { onSelectStop(stop) }
+                        .then(
+                            if (isSelected) Modifier.background(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f),
+                                shape = RoundedCornerShape(14.dp)
+                            ) else Modifier
+                        )
+                        .padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.Top
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
+                    // ── Timeline column ───────────────────────────────────
+                    Column(
+                        modifier = Modifier
+                            .width(26.dp)
+                            .fillMaxHeight(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // Top connector
                         Box(
                             modifier = Modifier
-                                .width(24.dp)
-                                .height(2.dp)
-                                .background(accent)
+                                .width(2.dp)
+                                .height(14.dp)
+                                .background(if (isFirst) Color.Transparent else lineColor)
                         )
+                        // Station dot
                         Box(
                             modifier = Modifier
-                                .size(if (selected) 14.dp else 10.dp)
-                                .background(
-                                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                    shape = CircleShape
+                                .size(if (isSelected || isTarget) 13.dp else 8.dp)
+                                .then(
+                                    if (isSelected) Modifier.border(
+                                        width = 2.dp,
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                                        shape = CircleShape
+                                    ) else Modifier
                                 )
+                                .background(dotColor, CircleShape)
                         )
+                        // Bottom connector fills remaining height
                         Box(
                             modifier = Modifier
-                                .width(24.dp)
-                                .height(2.dp)
-                                .background(accent)
+                                .width(2.dp)
+                                .weight(1f)
+                                .background(if (isLast) Color.Transparent else lineColor)
                         )
                     }
+
+                    // ── Stop name & label ─────────────────────────────────
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 10.dp, top = 8.dp, bottom = 14.dp)
+                    ) {
+                        Text(
+                            text = stop.name,
+                            style = if (isSelected) {
+                                MaterialTheme.typography.bodyLarge
+                            } else {
+                                MaterialTheme.typography.bodyMedium
+                            },
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onBackground
+                            },
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (isTarget) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = selectedLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
+                            )
+                        }
+                    }
+
+                    // ── Order badge ───────────────────────────────────────
                     Text(
-                        text = stop.name,
-                        style = if (selected) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = if (stop.order == targetOrder) selectedLabel else "#${stop.order}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        text = "#${stop.order}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(
+                            alpha = if (isSelected) 0.55f else 0.32f
+                        ),
+                        modifier = Modifier
+                            .padding(top = 10.dp, end = 6.dp)
+                            .align(Alignment.Top)
                     )
                 }
             }
