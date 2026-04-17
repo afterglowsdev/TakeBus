@@ -11,11 +11,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
@@ -31,18 +32,13 @@ fun FloatingDock(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    LiquidGlassSurface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+            .liquidBackdrop(shape = RoundedCornerShape(28.dp)),
         shape = RoundedCornerShape(28.dp),
-        tonalElevation = 0.dp,
-        shadowElevation = 18.dp,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
-        )
+        cornerRadius = 28.dp
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
@@ -55,10 +51,20 @@ fun FloatingDock(
                         .weight(1f)
                         .clip(CircleShape)
                         .background(
-                            if (selected) {
-                                MaterialTheme.colorScheme.primary
+                            brush = if (selected) {
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.95f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)
+                                    )
+                                )
                             } else {
-                                MaterialTheme.colorScheme.surface
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = 0.2f),
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)
+                                    )
+                                )
                             }
                         )
                         .clickable { onNavigate(item.route) }

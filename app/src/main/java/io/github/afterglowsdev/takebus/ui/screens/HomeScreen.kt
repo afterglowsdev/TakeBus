@@ -29,7 +29,6 @@ import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,8 +49,10 @@ import io.github.afterglowsdev.takebus.data.chelaile.HomeLineGroup
 import io.github.afterglowsdev.takebus.data.chelaile.HomeStationCard
 import io.github.afterglowsdev.takebus.ui.SessionState
 import io.github.afterglowsdev.takebus.ui.components.ActionPill
+import io.github.afterglowsdev.takebus.ui.components.LiquidGlassSurface
 import io.github.afterglowsdev.takebus.ui.components.LoadingPanel
 import io.github.afterglowsdev.takebus.ui.components.MessagePanel
+import io.github.afterglowsdev.takebus.ui.components.liquidBackdrop
 
 private sealed interface HomeUiState {
     data object Loading : HomeUiState
@@ -241,12 +242,12 @@ private fun StationWindowCard(
         ?.let { stringResource(R.string.common_distance_meters, it) }
         ?: nearLabel
 
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
+    LiquidGlassSurface(
+        modifier = modifier
+            .fillMaxWidth()
+            .liquidBackdrop(shape = RoundedCornerShape(30.dp)),
         shape = RoundedCornerShape(30.dp),
-        tonalElevation = 0.dp,
-        shadowElevation = 16.dp
+        cornerRadius = 30.dp
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -323,12 +324,14 @@ private fun HomeLineItem(
     group: HomeLineGroup,
     onClick: () -> Unit
 ) {
-    Surface(
+    LiquidGlassSurface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .liquidBackdrop(shape = RoundedCornerShape(22.dp)),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.background
+        cornerRadius = 22.dp,
+        glowAlpha = 0.13f
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
