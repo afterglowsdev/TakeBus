@@ -8,6 +8,10 @@ val envKeystorePath = System.getenv("KEYSTORE_PATH")
 val envKeystorePassword = System.getenv("KEYSTORE_PASSWORD")
 val envKeyAlias = System.getenv("KEY_ALIAS")
 val envKeyPassword = System.getenv("KEY_PASSWORD")
+val defaultVersionCode = 12
+val defaultVersionName = "1.0ppap"
+val envVersionCode = System.getenv("VERSION_CODE")?.toIntOrNull()
+val envVersionName = System.getenv("VERSION_NAME")
 val hasReleaseSigning =
     !envKeystorePath.isNullOrBlank() &&
         !envKeystorePassword.isNullOrBlank() &&
@@ -22,8 +26,8 @@ android {
         applicationId = "io.github.afterglowsdev.takebus"
         minSdk = 26
         targetSdk = 35
-        versionCode = 12
-        versionName = "1.0ppap"
+        versionCode = envVersionCode ?: defaultVersionCode
+        versionName = envVersionName ?: defaultVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -101,4 +105,3 @@ dependencies {
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
-
