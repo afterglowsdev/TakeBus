@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -231,10 +233,11 @@ private fun DirectionSection(
                 .padding(top = 14.dp, bottom = 10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Direction info card with primary colour background
+            // Direction info card with surface colour background
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 8.dp
             ) {
                 Column(
                     modifier = Modifier
@@ -246,14 +249,14 @@ private fun DirectionSection(
                         text = panel.line.directionLabel,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = panel.tip.ifBlank {
                             panel.buses.firstOrNull()?.etaText ?: noLiveTip
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.80f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.70f)
                     )
                     // Selected stop badge
                     val selectedStopName = panel.selectedStop.name
@@ -265,14 +268,14 @@ private fun DirectionSection(
                             modifier = Modifier
                                 .size(6.dp)
                                 .background(
-                                    MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.55f),
+                                    MaterialTheme.colorScheme.primary,
                                     CircleShape
                                 )
                         )
                         Text(
                             text = selectedStopName,
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.65f),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.60f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -379,6 +382,14 @@ private fun RouteTimeline(
     onSelectStop: (RouteStop) -> Unit
 ) {
     val selectedLabel = stringResource(R.string.line_selected_label)
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(stops) {
+        val index = stops.indexOfFirst { it.id == selectedStopId }
+        if (index != -1) {
+            listState.scrollToItem(maxOf(0, index - 2))
+        }
+    }
 
     Surface(
         modifier = modifier,
@@ -386,6 +397,7 @@ private fun RouteTimeline(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
+            state = listState,
             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                 horizontal = 16.dp,
                 vertical = 8.dp
